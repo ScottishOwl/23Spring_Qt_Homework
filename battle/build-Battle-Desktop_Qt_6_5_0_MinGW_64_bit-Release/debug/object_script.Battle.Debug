@@ -1,0 +1,13 @@
+debug/bloodsupply.o
+debug/flyer.o
+debug/main.o
+debug/mainscene.o
+debug/player_hero.o
+debug/map.o
+debug/enemy_remote.o
+debug/bullet.o
+debug/subscene.o
+debug/qrc_res.o
+debug/moc_flyer.o
+debug/moc_mainscene.o
+debug/moc_subscene.o

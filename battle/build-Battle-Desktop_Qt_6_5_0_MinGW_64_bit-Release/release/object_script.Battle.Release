@@ -1,0 +1,13 @@
+release/bloodsupply.o
+release/flyer.o
+release/main.o
+release/mainscene.o
+release/player_hero.o
+release/map.o
+release/enemy_remote.o
+release/bullet.o
+release/subscene.o
+release/qrc_res.o
+release/moc_flyer.o
+release/moc_mainscene.o
+release/moc_subscene.o
