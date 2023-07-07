@@ -23,5 +23,11 @@
         <file>res/6(1).png</file>
         <file>res/7(1).png</file>
         <file>res/BLAME.wav</file>
+        <file>res/shield1(1).png</file>
+        <file>res/shield1.png</file>
+        <file>res/points(1).png</file>
+        <file>res/points.png</file>
+        <file>res/clear(1).png</file>
+        <file>res/clear.png</file>
     </qresource>
 </RCC>

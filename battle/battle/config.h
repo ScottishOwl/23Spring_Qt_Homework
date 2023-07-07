@@ -12,7 +12,7 @@
 #define SCORE_SIZE 20  //分数显示字体大小
 #define INSTRUCT_SIZE 10  //游戏说明字体大小
 #define GAME_RATE 10    //帧率为10ms
-#define PIC_RATE 50  //玩家敌人更新频率为500ms(帧率的x倍)
+#define PIC_RATE 50  //玩家敌人及道具更新频率为500ms(帧率的x倍)
 
 /*音乐配置数据*/
 #define MUSIC_BLAME ":/res/BLAME.wav"
@@ -33,7 +33,32 @@
 #define BULLET_PATH ":/res/bullet.png" //子弹路径
 #define BULLET_SPEED 8  //子弹速度
 #define BULLET_NUM 30  //弹匣中子弹总数
-#define BULLET_INTERVAL 50  //发射子弹时间间隔
+#define BULLET_INTERVAL 30  //发射子弹时间间隔
+
+/*护盾配置数据*/
+#define SHIELD1_PATH ":/res/shield1.png" //护盾资源图片
+#define SHIELD1_PATH2 ":/res/shield1(1).png" //护盾动作2
+#define SHIELD_SPEED 5  //护盾速度
+#define SHIELD_NUM 5  //护盾总数
+#define SHIELD_INTERVAL 400  //护盾出现时间间隔
+#define SHIELD_APPEAR_UNLIKELINESS 5  //护盾可以出现后出现的概率的倒数
+#define SHIELD_DEFENSE_NUM 2  //护盾提供的护盾值
+
+/*奖励分数配置数据*/
+#define POINTS1_PATH ":/res/points.png" //奖励分数资源图片1
+#define POINTS1_PATH2 ":/res/points(1).png" //奖励分数1动作2
+#define POINTS_SPEED 6  //奖励分数速度
+#define POINTS_NUM 2  //奖励分数总数
+#define POINTS_INTERVAL 40000  //奖励分数出现时间间隔
+#define POINTS_APPEAR_UNLIKELINESS 200  //奖励分数可以出现后出现的概率的倒数
+
+/*清屏道具配置数据*/
+#define CLEAR1_PATH ":/res/clear.png" //清屏道具资源图片
+#define CLEAR1_PATH2 ":/res/clear(1).png" //清屏道具动作2
+#define CLEAR_SPEED 7  //清屏道具速度
+#define CLEAR_NUM 1  //清屏道具总数
+#define CLEAR_INTERVAL 800000  //清屏道具出现时间间隔
+#define CLEAR_APPEAR_UNLIKELINESS 8000  //清屏道具可以出现后出现的概率的倒数
 
 /*远程敌人配置数据*/
 #define REMOTE1_PATH ":/res/1.png"  //远程敌人1资源图片

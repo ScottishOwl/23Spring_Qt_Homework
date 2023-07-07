@@ -1,0 +1,13 @@
+debug/clear.o
+debug/main.o
+debug/mainscene.o
+debug/player_hero.o
+debug/map.o
+debug/enemy_remote.o
+debug/bullet.o
+debug/points.o
+debug/shield.o
+debug/subscene.o
+debug/qrc_res.o
+debug/moc_mainscene.o
+debug/moc_subscene.o

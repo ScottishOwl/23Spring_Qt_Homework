@@ -25,6 +25,7 @@ Mainscene::~Mainscene()
     delete label_score;
     delete label_high;
     delete label_total;
+    delete label_shield;
     delete m_state;
     delete mu_bgm;
     delete mu_shout;
@@ -36,6 +37,9 @@ void Mainscene::InitScene()
     //初始难度储存
     now_diff = temp_diff = REMOTE_SPEED;
     remote_interval = REMOTE_INTERVAL;
+    shield_interval = SHIELD_INTERVAL;
+    points_interval = POINTS_INTERVAL;
+    clear_interval = CLEAR_INTERVAL;
 
 
     //加载图标
@@ -51,7 +55,9 @@ void Mainscene::InitScene()
     connect(&m_sub,&Subscene::Close_signal, this, &Mainscene::React_fin);
 
     //定时器设置
-    m_Timer.setInterval(GAME_RATE);
+    m_Timer1.setInterval(GAME_RATE);
+    m_Timer2.setInterval(GAME_RATE);
+    m_Timer3.setInterval(GAME_RATE);
 
     //创建键盘定时器对象，并连接信号槽
     keyRespondTimer = new QTimer(this);
@@ -62,7 +68,31 @@ void Mainscene::InitScene()
     {
         m_remotes[i].Init();
     }
-    m_arecorder = 0;
+    m_enemy_recorder = 0;
+
+    //护盾出场间隔 初始化
+    for(int i = 0; i < SHIELD_NUM; i++)
+    {
+        m_shields[i].Init();
+    }
+    m_shield_recorder = 0;
+
+    //玩家护盾值 初始化
+    shield_num = 0;
+
+    //奖励分数出场间隔 初始化
+    for(int i = 0; i < POINTS_NUM; i++)
+    {
+        m_pointses[i].Init();
+    }
+    m_points_recorder = 0;
+
+    //清屏道具出场间隔 初始化
+    for(int i = 0; i < POINTS_NUM; i++)
+    {
+        m_clears[i].Init();
+    }
+    m_clear_recorder = 0;
 
     //分数初始化
     highscore = score = totalscore = 0;
@@ -107,8 +137,8 @@ void Mainscene::InitScene()
     m_shout.setFont(music_font);
     m_bgm.setFixedSize(150,50);
     m_shout.setFixedSize(150,50);
-    m_bgm.move( 10 + GAME_WIDTH,GAME_HEIGHT*25/32);
-    m_shout.move( 10 + GAME_WIDTH,GAME_HEIGHT*27/32);
+    m_bgm.move( 10 + GAME_WIDTH,GAME_HEIGHT*27/32);
+    m_shout.move( 10 + GAME_WIDTH,GAME_HEIGHT*29/32);
 
     music_check();
 
@@ -122,7 +152,7 @@ void Mainscene::InitScene()
 
     label_instruct=new QLabel(this);
     label_instruct->setFont(in_font);
-    label_instruct->move(10 + GAME_WIDTH,GAME_HEIGHT*8/16);
+    label_instruct->move(10 + GAME_WIDTH,GAME_HEIGHT*17/32);
     label_instruct->setFixedSize(500,200);
     label_instruct->setPalette(in_pa);
     label_instruct->setText(QString("操作说明:")
@@ -144,19 +174,25 @@ void Mainscene::InitScene()
 
     label_high=new QLabel(this);
     label_high->setFont(m_font);
-    label_high->move(10 + GAME_WIDTH,GAME_HEIGHT/8);
+    label_high->move(10 + GAME_WIDTH,GAME_HEIGHT/10);
     label_high->setFixedSize(500,100);
     label_high->setPalette(pa);
 
     label_total=new QLabel(this);
     label_total->setFont(m_font);
-    label_total->move(10 + GAME_WIDTH,GAME_HEIGHT*2/8);
+    label_total->move(10 + GAME_WIDTH,GAME_HEIGHT*2/10);
     label_total->setFixedSize(500,100);
     label_total->setPalette(pa);
 
+    label_shield=new QLabel(this);
+    label_shield->setFont(m_font);
+    label_shield->move(10 + GAME_WIDTH,GAME_HEIGHT*3/10);
+    label_shield->setFixedSize(500,100);
+    label_shield->setPalette(pa);
+
     m_state=new QLabel(this);
     m_state->setFont(m_font);
-    m_state->move(10 + GAME_WIDTH,GAME_HEIGHT*3/8);
+    m_state->move(10 + GAME_WIDTH,GAME_HEIGHT*4/10);
     m_state->setFixedSize(500,100);
     m_state->setPalette(pa);
     QString str4 = QString("当前状态:游戏中");
@@ -171,13 +207,35 @@ void Mainscene::InitScene()
 void Mainscene::playGame()
 {
     //启动定时器
-    m_Timer.start();
+    m_Timer1.start();
+    m_Timer2.start();
+    m_Timer3.start();
+    m_Timer4.start();
+    m_Timer5.start();
 
     //监听定时器发送的信号
-    connect(&m_Timer , &QTimer::timeout,[=](){
+    connect(&m_Timer1 , &QTimer::timeout,[=](){
 
         //敌人出场
         RemoteToScreen();
+    });
+
+    connect(&m_Timer2 , &QTimer::timeout,[=](){
+        //护盾出场
+        ShieldToScreen();
+    });
+
+    connect(&m_Timer4 , &QTimer::timeout,[=](){
+        //奖励分数出场
+        PointsToScreen();
+    });
+
+    connect(&m_Timer5 , &QTimer::timeout,[=](){
+        //奖励分数出场
+        ClearToScreen();
+    });
+
+    connect(&m_Timer3 , &QTimer::timeout,[=](){
 
         //更新游戏中元素坐标
         updatePosition();
@@ -192,10 +250,10 @@ void Mainscene::playGame()
 
 void Mainscene::RemoteToScreen()
 {
-    m_arecorder++;
+    m_enemy_recorder++;
     //未达到出场间隔 直接return
-    if(m_arecorder < remote_interval ) return;
-    m_arecorder = 0;
+    if(m_enemy_recorder < remote_interval ) return;
+    m_enemy_recorder = 0;
 
     for(int i = 0 ;i < REMOTE_NUM ;i++)
     {
@@ -209,8 +267,104 @@ void Mainscene::RemoteToScreen()
 
             //坐标
             m_remotes[i].m_x = MOVE_LEFT+ rand()%( MOVE_RIGHT - MOVE_LEFT );
-            qDebug()<<rand();
+
             m_remotes[i].m_y = -m_remotes[i].m_Rect.height();
+            break;
+        }
+    }
+}
+
+void Mainscene::ShieldToScreen()
+{
+    m_shield_recorder++;
+
+    //未达到出场间隔 直接return
+    if(m_shield_recorder < shield_interval ) return;
+
+    //达到出场间隔，随机决定是否出场
+    int m_rand_ToScreen = rand() % SHIELD_APPEAR_UNLIKELINESS;
+    if(m_rand_ToScreen) return;
+
+    m_shield_recorder = 0;
+
+    for(int i = 0 ;i < SHIELD_NUM ;i++)
+    {
+        //如果是空闲 则出场
+        if(m_shields[i].m_Free)
+        {
+            m_shields[i].m_Free=0;
+
+            //图片加载
+            m_shields[i].Init();
+
+            //坐标
+            m_shields[i].m_x = MOVE_LEFT+ rand()%( MOVE_RIGHT - MOVE_LEFT );
+
+            m_shields[i].m_y = -m_shields[i].m_Rect.height();
+            break;
+        }
+    }
+}
+
+void Mainscene::PointsToScreen()
+{
+    m_points_recorder++;
+
+    //未达到出场间隔 直接return
+    if(m_points_recorder < points_interval ) return;
+
+    //达到出场间隔，随机决定是否出场
+    int m_rand_ToScreen = rand() % POINTS_APPEAR_UNLIKELINESS;
+    if(m_rand_ToScreen) return;
+
+    m_points_recorder = 0;
+
+    for(int i = 0 ;i < POINTS_NUM ;i++)
+    {
+        //如果是空闲 则出场
+        if(m_pointses[i].m_Free)
+        {
+            m_pointses[i].m_Free=0;
+
+            //图片加载
+            m_pointses[i].Init();
+
+            //坐标
+            m_pointses[i].m_x = MOVE_LEFT+ rand()%( MOVE_RIGHT - MOVE_LEFT );
+
+            m_pointses[i].m_y = -m_pointses[i].m_Rect.height();
+            break;
+        }
+    }
+}
+
+void Mainscene::ClearToScreen()
+{
+    m_clear_recorder++;
+
+    //未达到出场间隔 直接return
+    if(m_clear_recorder < clear_interval ) return;
+
+    //达到出场间隔，随机决定是否出场
+    int m_rand_ToScreen = rand() % CLEAR_APPEAR_UNLIKELINESS;
+    if(m_rand_ToScreen) return;
+
+    m_clear_recorder = 0;
+
+    for(int i = 0 ;i < CLEAR_NUM ;i++)
+    {
+        //如果是空闲 则出场
+        if(m_clears[i].m_Free)
+        {
+            m_clears[i].m_Free=0;
+
+            //图片加载
+            m_clears[i].Init();
+
+            //坐标
+            m_clears[i].m_x = MOVE_LEFT+ rand()%( MOVE_RIGHT - MOVE_LEFT );
+
+            m_clears[i].m_y = -m_clears[i].m_Rect.height();
             break;
         }
     }
@@ -240,6 +394,33 @@ void Mainscene::updatePosition()
                     update_label();
                 }
             m_remotes[i].updatePosition();
+        }
+    }
+
+    //护盾位置更新
+    for(int i = 0; i < SHIELD_NUM; i++)
+    {
+        if(m_shields[i].m_Free == 0)
+        {
+            m_shields[i].updatePosition();
+        }
+    }
+
+    //奖励分数位置更新
+    for(int i = 0; i < POINTS_NUM; i++)
+    {
+        if(m_pointses[i].m_Free == 0)
+        {
+            m_pointses[i].updatePosition();
+        }
+    }
+
+    //清屏道具位置更新
+    for(int i = 0; i < CLEAR_NUM; i++)
+    {
+        if(m_clears[i].m_Free == 0)
+        {
+            m_clears[i].updatePosition();
         }
     }
 }
@@ -275,7 +456,39 @@ void Mainscene::paintEvent(QPaintEvent *)
             }
         }
     }
+    //绘制护盾
+    for(int i = 0; i < SHIELD_NUM; i++)
+    {
+        //非空闲才绘制
+        if(m_shields[i].m_Free == 0)
+        {
+            if(m_shields[i].m_model == 1)painter.drawPixmap(m_shields[i].m_x,m_shields[i].m_y,m_shields[i].m_shield);
+            else if(m_shields[i].m_model == 2)painter.drawPixmap(m_shields[i].m_x,m_shields[i].m_y,m_shields[i].m_shield2);
 
+        }
+    }
+    //绘制奖励分数
+    for(int i = 0; i < POINTS_NUM; i++)
+    {
+        //非空闲才绘制
+        if(m_pointses[i].m_Free == 0)
+        {
+            if(m_pointses[i].m_model == 1)painter.drawPixmap(m_pointses[i].m_x,m_pointses[i].m_y,m_pointses[i].m_points);
+            else if(m_pointses[i].m_model == 2)painter.drawPixmap(m_pointses[i].m_x,m_pointses[i].m_y,m_pointses[i].m_points2);
+
+        }
+    }    
+    //绘制清屏道具
+    for(int i = 0; i < CLEAR_NUM; i++)
+    {
+        //非空闲才绘制
+        if(m_clears[i].m_Free == 0)
+        {
+            if(m_clears[i].m_model == 1)painter.drawPixmap(m_clears[i].m_x,m_clears[i].m_y,m_clears[i].m_clear);
+            else if(m_clears[i].m_model == 2)painter.drawPixmap(m_clears[i].m_x,m_clears[i].m_y,m_clears[i].m_clear2);
+
+        }
+    }
 }
 
 //碰撞检测
@@ -302,16 +515,110 @@ void Mainscene::CollisionDetection()
             //如果子弹矩形框和玩家矩形框相交，发生碰撞，同时变为空闲状态即可
             if(m_hero.m_Rect.intersects(m_remotes[i].m_bullets[j].m_Rect))
             {
-                is_bgm = is_shout = 0;
-                music_check();
                 m_remotes[i].m_bullets[j].m_Free = 1;
+
+                if(shield_num > 0)
+                {
+                    shield_num--;
+                    update_label();
+                    continue;
+                }
+
+                else
+                {
+                    is_bgm = is_shout = 0;
+                music_check();
                 score = 0;
                 update_label();
                 temp_diff = now_diff;
                 //游戏暂停
-                m_Timer.stop();
+                m_Timer1.stop();
+                m_Timer2.stop();
+                m_Timer3.stop();
                 m_sub.show();
+                }
             }
+        }
+    }
+
+    //遍历所有非空闲的护盾
+    for(int i = 0 ;i < SHIELD_NUM;i++)
+    {
+        if(m_shields[i].m_Free)
+        {
+            //空闲护盾 跳转下一次循环
+            continue;
+        }
+
+        if(m_hero.m_Rect.intersects(m_shields[i].m_Rect))
+        {
+            shield_num += SHIELD_DEFENSE_NUM;
+            m_shields[i].m_Free = 1;
+
+            //显示分数更新
+            update_label();
+        }
+    }
+
+    //遍历所有非空闲的奖励分数
+    for(int i = 0 ;i < POINTS_NUM;i++)
+    {
+        if(m_pointses[i].m_Free)
+        {
+            //空闲护盾 跳转下一次循环
+            continue;
+        }
+
+        if(m_hero.m_Rect.intersects(m_pointses[i].m_Rect))
+        {
+            //分数更新
+            score += (now_diff - 2);
+            totalscore += (now_diff - 2);
+            if(score > highscore) highscore = score;
+
+            m_pointses[i].m_Free = 1;
+
+            //显示分数更新
+            update_label();
+        }
+    }
+
+    //遍历所有非空闲的清屏道具
+    for(int i = 0 ;i < CLEAR_NUM;i++)
+    {
+        if(m_clears[i].m_Free)
+        {
+            //空闲护盾 跳转下一次循环
+            continue;
+        }
+
+        if(m_hero.m_Rect.intersects(m_clears[i].m_Rect))
+        {
+            m_clears[i].m_Free = 1;
+
+            for(int k = 0 ;k < REMOTE_NUM;k++)
+            {
+                if(m_remotes[k].m_Free)
+                {
+                //空闲敌人 跳转下一次循环
+                continue;
+                }
+
+                //遍历所有 非空闲的子弹
+                for(int tmp = 0 ; tmp < BULLET_NUM;tmp++)
+                {
+                m_remotes[k].m_bullets[tmp].m_Free = 1;
+                }
+
+                m_remotes[k].m_Free = 1;
+
+            //分数更新
+            score += 1;
+            totalscore += 1;
+            if(score > highscore) highscore = score;
+            }
+            //显示分数更新
+            update_label();
         }
     }
 }
@@ -358,7 +665,7 @@ void Mainscene::keyReleaseEvent(QKeyEvent *event){
 
 void Mainscene::keyslot()
 {
-    //对键盘指令作出相应：反击、移动
+    //对键盘指令作出相应：移动
 
     int limit_right = MOVE_RIGHT; //右边界
     int limit_left = MOVE_LEFT; //左边界
@@ -419,6 +726,24 @@ void Mainscene::React_con()
         }
     }
 
+    //清空场上护盾
+    for(int i = 0; i < SHIELD_NUM; i++)
+    {
+        m_shields[i].m_Free = 1;
+    }
+
+    //清空场上奖励分数
+    for(int i = 0; i < POINTS_NUM; i++)
+    {
+        m_pointses[i].m_Free = 1;
+    }
+
+    //清空场上清屏道具
+    for(int i = 0; i < CLEAR_NUM; i++)
+    {
+        m_clears[i].m_Free = 1;
+    }
+
     //清空键盘指令容器
     foreach (int key, keys)
     {
@@ -443,7 +768,9 @@ void Mainscene::React_con()
     }
 
     //游戏重新开始
-    m_Timer.start();
+    m_Timer1.start();
+    m_Timer2.start();
+    m_Timer3.start();
 }
 
 //对结束按钮响应
@@ -481,7 +808,9 @@ void Mainscene::m_Pause()
         }
 
         //继续
-        m_Timer.start();
+        m_Timer1.start();
+        m_Timer2.start();
+        m_Timer3.start();
         is_Pause = 0;
 
         //恢复音乐状态
@@ -511,7 +840,9 @@ void Mainscene::m_Pause()
         is_shout = 0;
 
         //暂停
-        m_Timer.stop();
+        m_Timer1.stop();
+        m_Timer2.stop();
+        m_Timer3.stop();
         is_Pause = 1;
 
         //更改标签显示
@@ -534,6 +865,9 @@ void Mainscene::update_label()
 
     QString str3 = QString("总计得分：%1").arg(totalscore);
     label_total->setText(str3);
+
+    QString str5 = QString("当前护盾量：%1").arg(shield_num);
+    label_shield->setText(str5);
 
     if(is_Pause == 1)
     {

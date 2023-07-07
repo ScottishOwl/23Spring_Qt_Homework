@@ -14,6 +14,9 @@
 #include "enemy_remote.h"
 #include "config.h"
 #include "subscene.h"
+#include "shield.h"
+#include "points.h"
+#include "clear.h"
 
 class Mainscene : public QWidget
 {
@@ -51,7 +54,7 @@ public:
     Player_Hero m_hero;
 
     //定时器更新地图
-    QTimer m_Timer;
+    QTimer m_Timer1,m_Timer2,m_Timer3,m_Timer4,m_Timer5;
 
     //远程敌人出场
     void RemoteToScreen();
@@ -59,9 +62,42 @@ public:
     //远程敌人数组
     Enemy_Remote m_remotes[REMOTE_NUM];
 
+    //护盾出场
+    void ShieldToScreen();
+
+    //护盾数组
+    Shield m_shields[SHIELD_NUM];
+
+    //奖励分数出场
+    void PointsToScreen();
+
+    //奖励分数数组
+    Points m_pointses[POINTS_NUM];
+
+    //清屏道具出场
+    void ClearToScreen();
+
+    //清屏道具数组
+    Clear m_clears[POINTS_NUM];
+
+    //玩家护盾值
+    int shield_num;
+
     //远程敌人出场间隔记录
-    int m_arecorder;
+    int m_enemy_recorder;
     int remote_interval;
+
+    //护盾出场间隔记录
+    int m_shield_recorder;
+    int shield_interval;
+
+    //奖励分数出场间隔记录
+    int m_points_recorder;
+    int points_interval;
+
+    //清屏道具出场间隔记录
+    int m_clear_recorder;
+    int clear_interval;
 
     //碰撞检测
     void CollisionDetection();
@@ -88,8 +124,8 @@ public:
     //操作说明
     QLabel *label_instruct;
 
-    //显示目前得分 最高分 总得分
-    QLabel *label_score,*label_high,*label_total;
+    //显示目前得分 最高分 总得分 护盾值
+    QLabel *label_score,*label_high,*label_total,*label_shield;
     void update_label();
 
     //显示游戏状态（暂停/未暂停）

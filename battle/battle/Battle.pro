@@ -9,29 +9,28 @@ CONFIG += c++17
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
-    bloodsupply.cpp \
-    flyer.cpp \
+    clear.cpp \
     main.cpp \
     mainscene.cpp \
     player_hero.cpp \
     map.cpp \
     enemy_remote.cpp \
     bullet.cpp \
+    points.cpp \
+    shield.cpp \
     subscene.cpp
 
 HEADERS += \
-    bloodsupply.h \
+    clear.h \
     config.h \
-    flyer.h \
-    global.h \
-    mainscene.h \
     mainscene.h \
     player_hero.h \
     map.h \
     enemy_remote.h \
     bullet.h \
-    subscene.h \
-    supply.h
+    points.h \
+    shield.h \
+    subscene.h
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
