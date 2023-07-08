@@ -28,7 +28,6 @@ Mainscene::~Mainscene()
     delete label_shield;
     delete m_state;
     delete mu_bgm;
-    delete mu_shout;
     delete label_instruct;
 }
 
@@ -58,6 +57,8 @@ void Mainscene::InitScene()
     m_Timer1.setInterval(GAME_RATE);
     m_Timer2.setInterval(GAME_RATE);
     m_Timer3.setInterval(GAME_RATE);
+    m_Timer4.setInterval(GAME_RATE);
+    m_Timer5.setInterval(GAME_RATE);
 
     //创建键盘定时器对象，并连接信号槽
     keyRespondTimer = new QTimer(this);
@@ -107,41 +108,19 @@ void Mainscene::InitScene()
     mu_bgm->setVolume(3);
     mu_bgm->setLoopCount(QSoundEffect::Infinite);  //设置无限循环播放
 
-    mu_shout = new QSoundEffect();
-    int number = QRandomGenerator::global()->bounded(2);
-    /*mu_shout->setSource(number==0?(QUrl::fromLocalFile(MUSIC_SHOUT)):(QUrl::fromLocalFile(MUSIC_BGM)));*/
-    /*mu_shout->setSource(QUrl::fromLocalFile(MUSIC_SHOUT));*/
-    if(number==0){
-        mu_shout->setSource(QUrl::fromLocalFile(MUSIC_SHOUT));
-    }
-    else
-    {
-        mu_shout->setSource(QUrl::fromLocalFile(MUSIC_BLAME));
-    }
-    mu_shout->setVolume(3);
-    mu_shout->setLoopCount(QSoundEffect::Infinite);  //设置无限循环播放
-
     //记录音乐状态：均开启
     is_bgm = last_bgm = 1;
-    is_shout = last_shout = 1;
     connect(&m_bgm, &QPushButton::clicked, this, &Mainscene::control_bgm);
-    connect(&m_shout, &QPushButton::clicked, this, &Mainscene::control_shout);
     m_bgm.setParent(this);
-    m_shout.setParent(this);
     m_bgm.setText("开启/关闭音乐");
-    m_shout.setText("开启/关闭人声");
     QFont music_font;
     music_font.setFamily("华文新魏");
     music_font.setPointSize(15);
     m_bgm.setFont(music_font);
-    m_shout.setFont(music_font);
     m_bgm.setFixedSize(150,50);
-    m_shout.setFixedSize(150,50);
     m_bgm.move( 10 + GAME_WIDTH,GAME_HEIGHT*27/32);
-    m_shout.move( 10 + GAME_WIDTH,GAME_HEIGHT*29/32);
 
     music_check();
-
 
     //标签初始化
     QFont in_font;
@@ -526,7 +505,7 @@ void Mainscene::CollisionDetection()
 
                 else
                 {
-                    is_bgm = is_shout = 0;
+                    is_bgm = 0;
                 music_check();
                 score = 0;
                 update_label();
@@ -535,6 +514,8 @@ void Mainscene::CollisionDetection()
                 m_Timer1.stop();
                 m_Timer2.stop();
                 m_Timer3.stop();
+                m_Timer4.stop();
+                m_Timer5.stop();
                 m_sub.show();
                 }
             }
@@ -710,7 +691,6 @@ void Mainscene::React_con()
 {
     //恢复音乐状态
     is_bgm = last_bgm;
-    is_shout = last_shout;
     music_check();
 
     m_sub.hide();
@@ -771,6 +751,8 @@ void Mainscene::React_con()
     m_Timer1.start();
     m_Timer2.start();
     m_Timer3.start();
+    m_Timer4.start();
+    m_Timer5.start();
 }
 
 //对结束按钮响应
@@ -811,11 +793,12 @@ void Mainscene::m_Pause()
         m_Timer1.start();
         m_Timer2.start();
         m_Timer3.start();
+        m_Timer4.start();
+        m_Timer5.start();
         is_Pause = 0;
 
         //恢复音乐状态
         is_bgm = last_bgm;
-        is_shout = last_shout;
 
         //更改标签显示
         QString str4 = QString("当前状态:游戏中");
@@ -837,12 +820,13 @@ void Mainscene::m_Pause()
 
         //关闭音乐
         is_bgm = 0;
-        is_shout = 0;
 
         //暂停
         m_Timer1.stop();
         m_Timer2.stop();
         m_Timer3.stop();
+        m_Timer4.stop();
+        m_Timer5.stop();
         is_Pause = 1;
 
         //更改标签显示
@@ -901,26 +885,6 @@ void Mainscene::control_bgm()
     music_check();
 }
 
-void Mainscene::control_shout()
-{
-    if(is_Pause == 1)return;
-
-    //关闭音乐
-    if(last_shout == 1)
-    {
-        is_shout = 0;
-        last_shout = 0;
-    }
-
-    //开启音乐
-    else if(last_shout == 0)
-    {
-        is_shout = 1;
-        last_shout = 1;
-    }
-    music_check();
-}
-
 void Mainscene::music_check()
 {
     if(is_bgm)
@@ -931,16 +895,6 @@ void Mainscene::music_check()
     else if(is_bgm == 0)
     {
         mu_bgm->stop();
-    }
-
-    if(is_shout)
-    {
-        mu_shout->play();
-    }
-
-    else if(is_shout == 0)
-    {
-        mu_shout->stop();
     }
 }
 

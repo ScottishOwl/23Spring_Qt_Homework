@@ -132,16 +132,15 @@ public:
     QLabel *m_state;
 
     //记录音乐开关状态
-    bool is_bgm,is_shout,last_bgm,last_shout;
+    bool is_bgm,last_bgm;
 
     //关闭与打开音乐实现
     QPushButton m_bgm,m_shout;
     void control_bgm();
-    void control_shout();
     void music_check();
 
     //音乐
-    QSoundEffect *mu_bgm,*mu_shout;
+    QSoundEffect *mu_bgm;
 
     //储存难度
     int now_diff,temp_diff;

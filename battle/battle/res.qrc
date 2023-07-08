@@ -3,7 +3,6 @@
         <file>res/hero.png</file>
         <file>res/hero2.png</file>
         <file>res/BGM.wav</file>
-        <file>res/SHOUT.wav</file>
         <file>res/background.jpg</file>
         <file>res/hero3.png</file>
         <file>res/bullet.png</file>
@@ -22,7 +21,6 @@
         <file>res/5(1).png</file>
         <file>res/6(1).png</file>
         <file>res/7(1).png</file>
-        <file>res/BLAME.wav</file>
         <file>res/shield1(1).png</file>
         <file>res/shield1.png</file>
         <file>res/points(1).png</file>
